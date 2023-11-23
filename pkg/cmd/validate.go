@@ -3,13 +3,14 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/spf13/cobra"
@@ -39,8 +40,7 @@ func NewValidateCmd() *cobra.Command {
 }
 
 func validate(cmd *cobra.Command, args []string) error {
-
-	filepath.WalkDir(Path,
+	err := filepath.WalkDir(Path,
 		func(path string, d os.DirEntry, err error) error {
 			if err != nil {
 				return err
@@ -57,8 +57,12 @@ func validate(cmd *cobra.Command, args []string) error {
 			}
 			return nil
 		})
+	if err != nil {
+		logrus.Errorf("%s", err)
+		return err
+	}
 
-	err := ValidatePackageCR()
+	err = ValidatePackageCR()
 	if err != nil {
 		logrus.Errorf("%s", err)
 		return err
@@ -140,7 +144,7 @@ func ValidatePackageCR() error {
 				return ok
 			})
 			if err != nil {
-				return fmt.Errorf(`Failed to add custom validation for "{metadata.name} == {spec.refName}.{spec.version}": %s`, err)
+				return fmt.Errorf(`failed to add custom validation for "{metadata.name} == {spec.refName}.{spec.version}": %s`, err)
 			}
 
 			// register custom validation for "{spec.template.spec.fetch[0].imgpkgBundle.image} is dev.registry.tanzu.vmware.com reference"
@@ -158,7 +162,7 @@ func ValidatePackageCR() error {
 				return ok
 			})
 			if err != nil {
-				return fmt.Errorf(`Failed to add custom validation for "{spec.template.spec.fetch[0].imgpkgBundle.image} is dev.registry.tanzu.vmware.com reference": %s`, err)
+				return fmt.Errorf(`failed to add custom validation for "{spec.template.spec.fetch[0].imgpkgBundle.image} is dev.registry.tanzu.vmware.com reference": %s`, err)
 			}
 
 			// register custom validation for "{spec.template.spec.fetch[0].imgpkgBundle.image} has no manifests"
@@ -177,14 +181,14 @@ func ValidatePackageCR() error {
 				cmd := exec.Command("imgpkg", "describe", "-b", imgpkgBundle, "-o", "yaml")
 				output, err := cmd.CombinedOutput()
 				if err != nil {
-					logrus.Errorf("Failed to get imgpkg describe for bundle %s: %s: %s (%s)", imgpkgBundle, err, output, strings.Join(cmd.Args, " "))
+					logrus.Errorf("failed to get imgpkg describe for bundle %s: %s: %s (%s)", imgpkgBundle, err, output, strings.Join(cmd.Args, " "))
 					logrus.Errorf(`Validation "{spec.template.spec.fetch[0].imgpkgBundle.image} has no manifests" unsuccessful for %s`, imgpkgBundle)
 					return false
 				}
 
 				err = yaml.Unmarshal(output, imgpkgDescribe)
 				if err != nil {
-					logrus.Errorf("Failed to unmarshal imgpkg describe output for bundle %s: %s", imgpkgBundle, err)
+					logrus.Errorf("failed to unmarshal imgpkg describe output for bundle %s: %s", imgpkgBundle, err)
 					logrus.Errorf(`Validation "{spec.template.spec.fetch[0].imgpkgBundle.image} has no manifests" unsuccessful for %s`, imgpkgBundle)
 					return false
 				}
@@ -203,17 +207,18 @@ func ValidatePackageCR() error {
 
 				// for all images in the bundle, get their manifests
 				for _, image := range imgpkgDescribe.Content.Images {
+					// #nosec G204
 					cmd := exec.Command("crane", "manifest", image.Image)
 					output, err := cmd.CombinedOutput()
 					if err != nil {
-						logrus.Errorf("Failed to get crane manifest for %s (bundle %s): %s: %s (%s)", image.Image, imgpkgBundle, err, output, strings.Join(cmd.Args, " "))
+						logrus.Errorf("failed to get crane manifest for %s (bundle %s): %s: %s (%s)", image.Image, imgpkgBundle, err, output, strings.Join(cmd.Args, " "))
 						logrus.Errorf(`Validation "{spec.template.spec.fetch[0].imgpkgBundle.image} has no manifests" unsuccessful for %s`, imgpkgBundle)
 						return false
 					}
 
 					err = yaml.Unmarshal(output, craneManifests)
 					if err != nil {
-						logrus.Errorf("Failed to unmarshal crane manifest output for %s (bundle %s): %s", image.Image, imgpkgBundle, err)
+						logrus.Errorf("failed to unmarshal crane manifest output for %s (bundle %s): %s", image.Image, imgpkgBundle, err)
 						logrus.Errorf(`Validation "{spec.template.spec.fetch[0].imgpkgBundle.image} has no manifests" unsuccessful for %s`, imgpkgBundle)
 						return false
 					}
@@ -230,7 +235,7 @@ func ValidatePackageCR() error {
 				return true
 			})
 			if err != nil {
-				return fmt.Errorf(`Failed to add custom validation for "{spec.template.spec.fetch[0].imgpkgBundle.image} has no manifests": %s`, err)
+				return fmt.Errorf(`failed to add custom validation for "{spec.template.spec.fetch[0].imgpkgBundle.image} has no manifests": %s`, err)
 			}
 
 			// register custom validation for "{spec.template.spec.template.kbld.paths} has imgpkg entry"
@@ -253,21 +258,21 @@ func ValidatePackageCR() error {
 				return false
 			})
 			if err != nil {
-				return fmt.Errorf(`Failed to add custom validation for "{spec.template.spec.template.kbld.paths} has imgpkg entry": %s`, err)
+				return fmt.Errorf(`failed to add custom validation for "{spec.template.spec.template.kbld.paths} has imgpkg entry": %s`, err)
 			}
 
 			// read file and test
 			fileBytes, err := os.ReadFile(packageCR)
 			if err != nil {
-				return fmt.Errorf("Failed to read file %s: %s", packageCR, err)
+				return fmt.Errorf("failed to read file %s: %s", packageCR, err)
 			}
 			err = yaml.Unmarshal(fileBytes, fields)
 			if err != nil {
-				return fmt.Errorf("Failed to unmarshal file %s: %s", packageCR, err)
+				return fmt.Errorf("failed to unmarshal file %s: %s", packageCR, err)
 			}
 			err = validate.Struct(fields)
 			if err != nil {
-				return fmt.Errorf("Failed to validate YAML fields for %s: %s", packageCR, err)
+				return fmt.Errorf("failed to validate YAML fields for %s: %s", packageCR, err)
 			}
 
 			logrus.Infof("%s passed for %s", component, packageCR)
@@ -307,15 +312,15 @@ func ValidatePackageMetadataCR() error {
 			// read file and test
 			fileBytes, err := os.ReadFile(packageMetadataCR)
 			if err != nil {
-				return fmt.Errorf("Failed to read file %s: %s", packageMetadataCR, err)
+				return fmt.Errorf("failed to read file %s: %s", packageMetadataCR, err)
 			}
 			err = yaml.Unmarshal(fileBytes, fields)
 			if err != nil {
-				return fmt.Errorf("Failed to unmarshal file %s: %s", packageMetadataCR, err)
+				return fmt.Errorf("failed to unmarshal file %s: %s", packageMetadataCR, err)
 			}
 			err = validator.New().Struct(fields)
 			if err != nil {
-				return fmt.Errorf("Failed to validate YAML fields for %s: %s", packageMetadataCR, err)
+				return fmt.Errorf("failed to validate YAML fields for %s: %s", packageMetadataCR, err)
 			}
 
 			logrus.Infof("%s passed for %s", component, packageMetadataCR)
@@ -344,12 +349,12 @@ func ValidateAnnotationSize() error {
 
 			packageCRYAMLBytes, err = os.ReadFile(packageCR)
 			if err != nil {
-				return fmt.Errorf("Failed to read file %s: %s", packageCR, err)
+				return fmt.Errorf("failed to read file %s: %s", packageCR, err)
 			}
 
 			err = yaml.Unmarshal(packageCRYAMLBytes, &values)
 			if err != nil {
-				return fmt.Errorf("Failed to unmarshal file %s: %s", packageCR, err)
+				return fmt.Errorf("failed to unmarshal file %s: %s", packageCR, err)
 			}
 
 			// check total size limits
