@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"go.uber.org/multierr"
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/spf13/cobra"
@@ -62,24 +63,24 @@ func validate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = ValidatePackageCR()
+	err = multierr.Combine(
+		ValidatePackageCR(),
+		ValidatePackageMetadataCR(),
+		ValidateAnnotationSize(),
+	)
 	if err != nil {
 		logrus.Errorf("%s", err)
 		return err
 	}
 
-	err = ValidatePackageMetadataCR()
-	if err != nil {
-		logrus.Errorf("%s", err)
-		return err
+	errors := multierr.Errors(err)
+	if len(errors) > 0 {
+		for _, e := range errors {
+			logrus.Errorf("%s", e)
+		}
 	}
 
-	err = ValidateAnnotationSize()
-	if err != nil {
-		logrus.Errorf("%s", err)
-		return err
-	}
-	return nil
+	return err
 }
 
 var packageCRs = map[string]string{}         // {component: Package CR path}
