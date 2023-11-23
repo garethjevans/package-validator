@@ -6,9 +6,10 @@ require (
 	github.com/garethjevans/scm v0.0.0-20230918135400-6a78a358cbd4
 	github.com/go-playground/validator/v10 v10.15.5
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
+	go.uber.org/multierr v1.11.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -20,7 +21,7 @@ require (
 	github.com/acomagu/bufpipe v1.0.4 // indirect
 	github.com/bluekeyes/go-gitdiff v0.7.1 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
@@ -49,7 +50,6 @@ require (
 	github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f // indirect
 	github.com/skeema/knownhosts v1.2.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.13.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.15.0 // indirect
