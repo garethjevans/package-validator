@@ -3,13 +3,15 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
+	"go.uber.org/multierr"
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/spf13/cobra"
@@ -39,7 +41,6 @@ func NewValidateCmd() *cobra.Command {
 }
 
 func validate(cmd *cobra.Command, args []string) error {
-
 	filepath.WalkDir(Path,
 		func(path string, d os.DirEntry, err error) error {
 			if err != nil {
@@ -58,24 +59,20 @@ func validate(cmd *cobra.Command, args []string) error {
 			return nil
 		})
 
-	err := ValidatePackageCR()
-	if err != nil {
-		logrus.Errorf("%s", err)
-		return err
+	err := multierr.Combine(
+		ValidatePackageCR(),
+		ValidatePackageMetadataCR(),
+		ValidateAnnotationSize(),
+	)
+
+	errors := multierr.Errors(err)
+	if len(errors) > 0 {
+		for _, e := range errors {
+			logrus.Errorf("%s", e)
+		}
 	}
 
-	err = ValidatePackageMetadataCR()
-	if err != nil {
-		logrus.Errorf("%s", err)
-		return err
-	}
-
-	err = ValidateAnnotationSize()
-	if err != nil {
-		logrus.Errorf("%s", err)
-		return err
-	}
-	return nil
+	return err
 }
 
 var packageCRs = map[string]string{}         // {component: Package CR path}
