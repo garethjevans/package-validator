@@ -31,3 +31,4 @@ jobs:
           commit-message: 'chore(docs): regenerated docs'
           signoff: false
           title: 'chore(docs): regenerated docs'
+          token: ${{ secrets.HOMEBREW_TOKEN }}
