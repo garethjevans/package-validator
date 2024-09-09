@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/garethjevans/scm v0.0.0-20230918135400-6a78a358cbd4
-	github.com/go-playground/validator/v10 v10.22.0
+	github.com/go-playground/validator/v10 v10.22.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
