@@ -152,18 +152,18 @@ func ValidatePackageCR() error {
 			err = validate.RegisterValidation("imgpkgBundle-image-format", func(fl validator.FieldLevel) bool {
 				imgpkgBundle := fl.Field().String()
 
-				// check if dev registry image
-				ok := regexp.MustCompile(`^dev\.registry\.tanzu\.vmware\.com/.+@sha256:[a-f0-9]{64}$`).MatchString(imgpkgBundle)
+				// check if stored in the correct place
+				ok := regexp.MustCompile(`usw1\.packages\.broadcom\.com/.+@sha256:[a-f0-9]{64}$`).MatchString(imgpkgBundle)
 				if !ok {
-					logrus.Errorf(`Validation "{spec.template.spec.fetch[0].imgpkgBundle.image} is dev.registry.tanzu.vmware.com reference" unsuccessful for %s`, imgpkgBundle)
+					logrus.Errorf(`Validation "{spec.template.spec.fetch[0].imgpkgBundle.image} is usw1.packages.broadcom.com reference" unsuccessful for %s`, imgpkgBundle)
 				} else {
-					logrus.Infof(`Validation "{spec.template.spec.fetch[0].imgpkgBundle.image} is dev.registry.tanzu.vmware.com reference" successful for %s`, imgpkgBundle)
+					logrus.Infof(`Validation "{spec.template.spec.fetch[0].imgpkgBundle.image} is usw1.packages.broadcom.com reference" successful for %s`, imgpkgBundle)
 				}
 
 				return ok
 			})
 			if err != nil {
-				return fmt.Errorf(`failed to add custom validation for "{spec.template.spec.fetch[0].imgpkgBundle.image} is dev.registry.tanzu.vmware.com reference": %s`, err)
+				return fmt.Errorf(`failed to add custom validation for "{spec.template.spec.fetch[0].imgpkgBundle.image} is usw1.packages.broadcom.com reference": %s`, err)
 			}
 
 			// register custom validation for "{spec.template.spec.fetch[0].imgpkgBundle.image} has no manifests"
